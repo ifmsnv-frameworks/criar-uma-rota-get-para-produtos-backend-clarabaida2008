@@ -42,25 +42,29 @@ app.get('/', async (req: Request, res: Response) => {
     }
 });
 
+//TAREFA PRODUTOS
+app.get("/produtos", async (req: Request, res: Response) => {
+    if (!process.env.DBUSER || !process.env.DBPASSWORD || !process.env.DBNAME || !process.env.DBHOST || !process.env.DBPORT) {
+        res.status(500).send("Variáveis de ambiente do banco de dados não definidas");
+        return;
+    }
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.DBHOST,
+            user: process.env.DBUSER,
+            password: process.env.DBPASSWORD,
+            database: process.env.DBNAME,
+            port: Number(process.env.DBPORT)
+        });
 
-//Tarefa: Criar uma rota get para produtos que retorne a lista de produtos do banco de dados
-//O produto deve ter id, nome preco, urlfoto, descricao
-//Deve-se criar uma tabela no banco de dados AIVEN para armazenar os produtos
-//A resposta deve ser um array de produtos em formato JSON
-//Crie o código sql para criar a tabela de produtos
-/* 
-CREATE TABLE produtos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    preco DECIMAL(10, 2) NOT NULL,
-    urlfoto VARCHAR(255) NOT NULL,
-    descricao TEXT
-);
-Faz pelo menos 3 inserções nessa tabela
-*/ 
+        const [rows] = await connection.query("SELECT * FROM produtos");
+        res.json(rows);
 
-
-
+        await connection.end();
+    } catch (error) {
+        res.status(500).send("Erro ao buscar produtos: " + error);
+    }
+});
 
 app.listen(8000, () => {
     console.log('Server is running on port 8000');
